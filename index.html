@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CardForge Studio — Adventure ID Lab</title>
+<meta name="theme-color" content="#0f0f13">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Orbitron:wght@400;700&family=Pacifico&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0f13;--surface:#1a1a24;--surface2:#22222f;--border:#2e2e40;
+  --accent:#7c6af7;--accent2:#f76ac2;--text:#e8e8f0;--text2:#888899;--success:#4ade80;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  display:flex;flex-direction:column;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+@media print{body{display:none!important}}
+header{
+  background:linear-gradient(90deg,#0f0f13,#1a1228 50%,#0f0f13);
+  border-bottom:1px solid var(--border);padding:10px 16px;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:50;
+}
+.logo{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:10px;color:var(--text2);display:block;-webkit-text-fill-color:var(--text2);margin-top:-2px}
+.hsp{flex:1}
+.btnp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px}
+.btnp:active{opacity:.8}
+.btng{background:transparent;color:var(--text2);border:1px solid var(--border);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+.btng:active{color:var(--text);border-color:var(--accent)}
+.workspace{display:flex;flex:1;overflow:hidden;min-height:0}
+.panel-l{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.ps{padding:10px 12px;border-bottom:1px solid var(--border)}
+.ps h3{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:8px}
+.canvas-area{flex:1;display:flex;flex-direction:column;align-items:center;background:#13131a;padding:16px;overflow:auto;-webkit-overflow-scrolling:touch}
+.card-tabs{display:flex;gap:6px;margin-bottom:12px;flex-shrink:0}
+.tab-btn{padding:5px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.canvas-wrap{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--border),0 16px 48px rgba(0,0,0,.7);flex-shrink:0}
+canvas{display:block}
+.canvas-hint{margin-top:8px;font-size:10px;color:var(--text2);text-align:center}
+.panel-r{width:200px;min-width:200px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tool-btn{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:16px}
+.tool-btn:active,.tool-btn.active{border-color:var(--accent);background:rgba(124,106,247,.2)}
+label.tool-btn{cursor:pointer}
+.preset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+.preset-card{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:290/462;display:flex;align-items:flex-end;padding:5px;font-size:9px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);line-height:1.3}
+.preset-card:active{border-color:var(--accent2)}
+.sticker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.sticker-btn{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:18px;border-radius:5px;cursor:pointer;background:var(--surface2);border:1px solid transparent}
+.sticker-btn:active{border-color:var(--accent)}
+select,input[type=text],input[type=color]{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-size:12px;margin-top:3px;-webkit-appearance:none;appearance:none}
+input[type=range]{width:100%;accent-color:var(--accent);margin-top:3px}
+.color-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.color-swatch:active{transform:scale(1.2)}
+.prop-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+.prop-row label{font-size:10px;color:var(--text2);width:52px;flex-shrink:0}
+.prop-row .val{font-size:10px;color:var(--text2);width:26px;text-align:right}
+.layers-list{display:flex;flex-direction:column;gap:2px}
+.layer-item{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:5px;background:var(--surface2);font-size:11px;cursor:pointer;border:1px solid transparent}
+.layer-item.selected{border-color:var(--accent);background:rgba(124,106,247,.1)}
+.layer-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.layer-del{width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:none;background:transparent;cursor:pointer;font-size:10px;color:var(--text2)}
+.layer-del:active{color:#ff4757}
+.submit-area{padding:12px;border-top:1px solid var(--border);margin-top:auto}
+.btn-submit{background:linear-gradient(135deg,#f76ac2,#7c6af7);color:#fff;border:none;padding:10px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;width:100%;margin-bottom:6px}
+.btn-submit:active{opacity:.85}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+.modal h2{margin-bottom:14px;font-size:18px}
+.modal .field{margin-bottom:10px}
+.modal .field label{font-size:11px;color:var(--text2);display:block;margin-bottom:3px}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:9px;font-size:13px;transition:transform .3s;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.success{border-color:var(--success);color:var(--success)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* MOBILE */
+.mobile-nav{display:none;background:var(--surface);border-top:1px solid var(--border);padding:8px 4px;flex-shrink:0}
+.mobile-nav-inner{display:flex;justify-content:space-around;align-items:center;max-width:500px;margin:0 auto}
+.mnav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:8px;border:none;background:transparent}
+.mnav-btn span:first-child{font-size:20px}
+.mnav-btn.active{color:var(--accent)}
+.drawer{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surface);border-top:1px solid var(--border);border-radius:16px 16px 0 0;max-height:55vh;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
+.drawer.open{display:block}
+.drawer-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.drawer h3{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:10px}
+@media(max-width:768px){
+  .panel-l,.panel-r{display:none}
+  .canvas-area{padding:10px 8px}
+  .mobile-nav{display:block}
+}
+@media(max-width:400px){.logo-sub{display:none};header{padding:8px 10px;gap:8px}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">CardForge</div><span class="logo-sub">Adventure ID Lab</span></div>
+  <div class="hsp"></div>
+  <button class="btnp" onclick="openSubmitModal()">✨ Order</button>
+</header>
+
+<div class="workspace">
+<!-- LEFT PANEL -->
+<div class="panel-l">
+  <div class="ps">
+    <h3>Tools</h3>
+    <div class="tool-grid">
+      <div class="tool-btn active" id="tool-select" onclick="setTool('select')">↖</div>
+      <div class="tool-btn" onclick="addText()">T</div>
+      <div class="tool-btn" onclick="addShape('rect')">▬</div>
+      <div class="tool-btn" onclick="addShape('circle')">◯</div>
+      <div class="tool-btn" onclick="addSticker('❤️')">❤</div>
+      <div class="tool-btn" onclick="addSticker('⭐')">★</div>
+      <label class="tool-btn" style="cursor:pointer">🖼<input type="file" accept="image/*" style="display:none" onchange="uploadImage(this)"></label>
+      <div class="tool-btn" onclick="toggleBgPanel()">🎨</div>
+    </div>
+  </div>
+  <div class="ps" id="bg-panel" style="display:none">
+    <h3>Background</h3>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px" id="bgSwatchRow"></div>
+    <input type="color" onchange="setBg(this.value)" style="height:28px">
+    <div style="margin-top:8px;font-size:10px;color:var(--text2)">Gradients</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px" id="gradSwatches"></div>
+  </div>
+  <div class="ps">
+    <h3>Text Style</h3>
+    <select id="fontSelect" onchange="updateSelectedFont()">
+      <option value="Inter">Inter</option>
+      <option value="Playfair Display">Playfair Display</option>
+      <option value="Orbitron">Orbitron</option>
+      <option value="Pacifico">Pacifico</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Arial Black">Arial Black</option>
+      <option value="Impact">Impact</option>
+    </select>
+    <div class="prop-row">
+      <label>Size</label>
+      <input type="range" id="fontSizeSlider" min="8" max="72" value="20" oninput="updateFontSize(this)">
+      <span class="val" id="fontSizeVal">20</span>
+    </div>
+    <div class="color-row" id="textColorRow"></div>
+    <div style="display:flex;gap:4px;margin-top:6px">
+      <button class="btng" style="flex:1;padding:4px;font-size:12px" onclick="toggleBold()"><b>B</b></button>
+      <button class="btng" style="flex:1;padding:4px;font-size:12px" onclick="toggleItalic()"><i>I</i></button>
+      <button class="btng" style="flex:1;padding:4px;font-size:12px" onclick="toggleUnderline()"><u>U</u></button>
+    </div>
+  </div>
+  <div class="ps">
+    <h3>Stickers</h3>
+    <select id="stickerCategory" onchange="loadStickerSet(this.value)" style="font-size:11px">
+      <option value="love">💖 Love</option>
+      <option value="princess">👸 Princess</option>
+      <option value="space">🚀 Space</option>
+      <option value="cosplay">⚔️ Cosplay</option>
+      <option value="halloween">🎃 Halloween</option>
+      <option value="xmas">🎄 Christmas</option>
+      <option value="party">🎉 Party</option>
+      <option value="medical">🏥 Medical</option>
+      <option value="nature">🌸 Nature</option>
+      <option value="misc">✨ Misc</option>
+    </select>
+    <div class="sticker-grid" id="stickerGrid" style="margin-top:6px"></div>
+  </div>
+  <div class="ps">
+    <h3>Presets</h3>
+    <div class="preset-grid" id="presetGrid"></div>
+  </div>
+  <div class="submit-area">
+    <button class="btn-submit" onclick="openSubmitModal()">✨ Order Print</button>
+    <button class="btng" style="width:100%;text-align:center;font-size:11px" onclick="downloadCard()">⬇ Download PNG</button>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div class="canvas-area">
+  <div class="card-tabs">
+    <button class="tab-btn active" id="tab-front" onclick="switchTab('front')">✦ Front</button>
+    <button class="tab-btn" id="tab-back" onclick="switchTab('back')">◈ Back</button>
+  </div>
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="cardCanvas"></canvas>
+  </div>
+  <div class="canvas-hint">290×462px · 54×86mm card · Adventure ID Lab</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="panel-r">
+  <div class="ps">
+    <h3>Selected</h3>
+    <div id="propPanel" style="font-size:11px;color:var(--text2)">Nothing selected</div>
+  </div>
+  <div class="ps">
+    <h3>Layers</h3>
+    <div class="layers-list" id="layersList"></div>
+  </div>
+</div>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mnav-btn active" id="mnav-presets" onclick="mobileOpen('presets')"><span>🎨</span><span>Presets</span></button>
+    <button class="mnav-btn" id="mnav-tools" onclick="mobileOpen('tools')"><span>🛠</span><span>Tools</span></button>
+    <button class="mnav-btn" id="mnav-stickers" onclick="mobileOpen('stickers')"><span>✨</span><span>Stickers</span></button>
+    <button class="mnav-btn" id="mnav-layers" onclick="mobileOpen('layers')"><span>📋</span><span>Layers</span></button>
+    <button class="mnav-btn" onclick="openSubmitModal()"><span>🛒</span><span>Order</span></button>
+  </div>
+</nav>
+
+<!-- MOBILE DRAWERS -->
+<div class="drawer" id="drawer-presets">
+  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
+  <h3>Presets</h3>
+  <div class="preset-grid" id="presetGridMobile" style="margin-bottom:8px"></div>
+</div>
+<div class="drawer" id="drawer-tools">
+  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
+  <h3>Tools & Style</h3>
+  <div class="tool-grid" style="margin-bottom:10px">
+    <div class="tool-btn" onclick="setTool('select')">↖</div>
+    <div class="tool-btn" onclick="addText()">T</div>
+    <div class="tool-btn" onclick="addShape('rect')">▬</div>
+    <div class="tool-btn" onclick="addShape('circle')">◯</div>
+    <div class="tool-btn" onclick="addSticker('❤️')">❤</div>
+    <div class="tool-btn" onclick="addSticker('⭐')">★</div>
+    <label class="tool-btn" style="cursor:pointer">🖼<input type="file" accept="image/*" style="display:none" onchange="uploadImage(this)"></label>
+    <div class="tool-btn" onclick="toggleBgDrawer()">🎨</div>
+  </div>
+  <div id="bgDrawerInner" style="display:none">
+    <h3 style="margin-bottom:6px">Background</h3>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px" id="bgSwatchRowM"></div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px" id="gradSwatchesM"></div>
+  </div>
+  <select id="fontSelectM" onchange="updateSelectedFont()" style="margin-bottom:6px">
+    <option value="Inter">Inter</option><option value="Playfair Display">Playfair Display</option>
+    <option value="Orbitron">Orbitron</option><option value="Pacifico">Pacifico</option>
+    <option value="Georgia">Georgia</option><option value="Courier New">Courier New</option>
+    <option value="Impact">Impact</option>
+  </select>
+  <div class="color-row" id="textColorRowM"></div>
+  <div style="display:flex;gap:4px;margin-top:8px">
+    <button class="btng" style="flex:1;padding:5px" onclick="toggleBold()"><b>B</b></button>
+    <button class="btng" style="flex:1;padding:5px" onclick="toggleItalic()"><i>I</i></button>
+    <button class="btng" style="flex:1;padding:5px;border-color:#ff4757;color:#ff4757" onclick="deleteSelected()">✕ Del</button>
+  </div>
+  <button class="btng" style="width:100%;margin-top:8px;text-align:center" onclick="downloadCard()">⬇ Download</button>
+</div>
+<div class="drawer" id="drawer-stickers">
+  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
+  <h3>Stickers</h3>
+  <select id="stickerCategoryM" onchange="loadStickerSet(this.value)" style="margin-bottom:8px;font-size:11px">
+    <option value="love">💖 Love</option><option value="princess">👸 Princess</option>
+    <option value="space">🚀 Space</option><option value="cosplay">⚔️ Cosplay</option>
+    <option value="halloween">🎃 Halloween</option><option value="xmas">🎄 Christmas</option>
+    <option value="party">🎉 Party</option><option value="medical">🏥 Medical</option>
+    <option value="nature">🌸 Nature</option><option value="misc">✨ Misc</option>
+  </select>
+  <div class="sticker-grid" id="stickerGridMobile"></div>
+</div>
+<div class="drawer" id="drawer-layers">
+  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
+  <h3>Layers</h3>
+  <div class="layers-list" id="layersListMobile"></div>
+  <div style="display:flex;gap:6px;margin-top:8px">
+    <button class="btng" style="flex:1;font-size:11px" onclick="bringForward()">↑ Up</button>
+    <button class="btng" style="flex:1;font-size:11px" onclick="sendBackward()">↓ Down</button>
+    <button class="btng" style="flex:1;font-size:11px;border-color:#ff4757;color:#ff4757" onclick="deleteSelected()">✕ Del</button>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="submitModal" onclick="handleModalTap(event)">
+  <div class="modal">
+    <h2>✨ Order Your Card</h2>
+    <div class="field"><label>Your Name *</label><input type="text" id="orderName" placeholder="Jane Smith" autocomplete="name"></div>
+    <div class="field"><label>Email *</label><input type="text" id="orderEmail" placeholder="jane@example.com" autocomplete="email" inputmode="email"></div>
+    <div class="field"><label>Quantity</label><select id="orderQty"><option>1</option><option>2</option><option>5</option><option>10</option><option>25</option></select></div>
+    <div class="field"><label>Card Type</label><select id="orderType"><option>Front only</option><option>Front + Back</option></select></div>
+    <div class="field"><label>Notes</label><input type="text" id="orderNotes" placeholder="Special instructions..."></div>
+    <div id="submitStatus" style="font-size:12px;color:var(--text2);margin-top:6px;min-height:18px"></div>
+    <div class="modal-actions">
+      <button class="btng" onclick="closeSubmitModal()">Cancel</button>
+      <button class="btnp" onclick="submitOrder()" id="submitBtn">Submit Order</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/YOUR_GAS_SCRIPT_ID/exec';
+const WATERMARK = 'Adventure ID Lab';
+const CW = 290, CH = 462, XSCALE = 2.2;
+const MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 769;
+
+// ── RESPONSIVE CANVAS ──
+function dispScale() {
+  const avail = Math.min(window.innerWidth - (MOBILE ? 24 : 480), window.innerHeight - (MOBILE ? 220 : 130));
+  return Math.max(0.5, Math.min(avail, CW) / CW);
+}
+let ds = dispScale();
+const cvEl = document.getElementById('cardCanvas');
+cvEl.width = Math.round(CW * ds); cvEl.height = Math.round(CH * ds);
+
+const canvas = new fabric.Canvas('cardCanvas', {
+  width: Math.round(CW * ds), height: Math.round(CH * ds),
+  backgroundColor: '#1a1a2e', preserveObjectStacking: true,
+  stopContextMenu: true, fireRightClick: false,
+});
+canvas.setZoom(ds);
+
+// ── SCREENSHOT PREVENTION ──
+document.getElementById('canvasWrap').addEventListener('contextmenu', e => e.preventDefault());
+canvas.upperCanvasEl.addEventListener('touchstart', e => { if(e.touches.length>1) e.preventDefault(); }, {passive:false});
+canvas.upperCanvasEl.addEventListener('dragstart', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && 'sSPp'.includes(e.key)) {
+    e.preventDefault();
+    toast('Use the Order button to get your card! 😊');
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { ensureWM(0.35); canvas.renderAll(); }
+  else { ensureWM(0.18); canvas.renderAll(); }
+});
+
+// ── WATERMARK ──
+let wm = null;
+function ensureWM(op) {
+  op = op !== undefined ? op : 0.18;
+  if (wm) { canvas.remove(wm); }
+  wm = new fabric.Text(WATERMARK, {
+    left: CW/2, top: CH - 16, fontSize: 11, fill: '#ffffff', opacity: op,
+    fontFamily: 'Inter', fontWeight: '600', textAlign: 'center',
+    originX: 'center', originY: 'bottom',
+    selectable: false, evented: false, excludeFromExport: false,
+  });
+  canvas.add(wm); canvas.bringToFront(wm);
+}
+ensureWM();
+
+canvas.on('object:added', o => { if(o.target!==wm){ canvas.bringToFront(wm); updateLayers(); } });
+canvas.on('object:removed', o => { if(o.target!==wm){ ensureWM(); updateLayers(); } });
+canvas.on('object:modified', o => { if(o.target!==wm){ canvas.bringToFront(wm); updateLayers(); } });
+canvas.on('selection:created', updatePropPanel);
+canvas.on('selection:updated', updatePropPanel);
+canvas.on('selection:cleared', () => { document.getElementById('propPanel').innerHTML='<span>Nothing selected</span>'; });
+
+// ── FRONT/BACK ──
+const states = {front:null, back:null};
+let curTab = 'front';
+function saveState() {
+  const j = canvas.toJSON(['excludeFromExport']);
+  if(j.objects) j.objects = j.objects.filter(o=>o.text!==WATERMARK);
+  states[curTab] = JSON.stringify(j);
+}
+function restoreState(tab) {
+  wm = null;
+  if (states[tab]) {
+    canvas.loadFromJSON(states[tab], () => { ensureWM(); canvas.renderAll(); updateLayers(); });
+  } else {
+    canvas.clear(); canvas.setBackgroundColor('#1a1a2e', () => { ensureWM(); canvas.renderAll(); updateLayers(); });
+  }
+}
+function switchTab(tab) {
+  saveState(); curTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  restoreState(tab);
+}
+
+// ── TOOLS ──
+function setTool(n) {
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tool-select')?.classList.add('active');
+  canvas.isDrawingMode = false;
+}
+function addText() {
+  const t = new fabric.IText('Tap to edit', {
+    left:CW/2,top:CH/2-20,fontSize:20,fill:'#ffffff',fontFamily:getFont(),
+    fontWeight:'600',textAlign:'center',originX:'center',originY:'center',width:200,
+  });
+  canvas.add(t); canvas.setActiveObject(t); canvas.bringToFront(wm); canvas.renderAll();
+  if(MOBILE) closeAllDrawers();
+}
+function addShape(type) {
+  const fill = '#7c6af7';
+  let obj = type==='rect'
+    ? new fabric.Rect({left:80,top:160,width:130,height:70,fill,rx:8,ry:8})
+    : new fabric.Circle({left:100,top:160,radius:50,fill});
+  canvas.add(obj); canvas.setActiveObject(obj); canvas.bringToFront(wm); canvas.renderAll();
+  if(MOBILE) closeAllDrawers();
+}
+function addSticker(emoji) {
+  const t = new fabric.Text(emoji, {left:CW/2,top:CH/2,fontSize:44,originX:'center',originY:'center'});
+  canvas.add(t); canvas.setActiveObject(t); canvas.bringToFront(wm); canvas.renderAll();
+}
+function uploadImage(input) {
+  if(!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    fabric.Image.fromURL(e.target.result, img => {
+      const s = Math.min((CW*.75)/img.width,(CH*.75)/img.height);
+      img.set({left:CW/2,top:CH/2,scaleX:s,scaleY:s,originX:'center',originY:'center'});
+      canvas.add(img); canvas.setActiveObject(img); canvas.bringToFront(wm); canvas.renderAll();
+      if(MOBILE) closeAllDrawers();
+    });
+  };
+  reader.readAsDataURL(input.files[0]); input.value='';
+}
+function getFont() { return document.getElementById('fontSelect')?.value || document.getElementById('fontSelectM')?.value || 'Inter'; }
+
+// ── BACKGROUND ──
+const BG_COLORS = ['#ff6b9d','#c678ff','#7c6af7','#00d4ff','#00ff9d','#ffd700','#ff4757','#1a1a2e'];
+const BG_GRADS = [
+  ['#ff6b9d','#c678ff'],['#7c6af7','#00d4ff'],['#ffd700','#ff4757'],['#00ff9d','#00d4ff'],
+  ['#1a1a2e','#4a0e8f'],['#2c1654','#870000'],['#e96c50','#ffd700'],['#0f0c29','#302b63'],
+  ['#f8c8ea','#d4a0e8'],['#1a0900','#3d1a00'],['#0d3b1e','#1a5c2e'],['#0a0a2e','#1a1060'],
+];
+function buildBgSwatches(rowId) {
+  const el = document.getElementById(rowId); if(!el) return;
+  BG_COLORS.forEach(c=>{
+    const d=document.createElement('div'); d.className='color-swatch';
+    d.style.background=c; if(c==='#ffffff'||c==='#000000') d.style.border='1px solid #444';
+    d.onclick=()=>setBg(c); el.appendChild(d);
+  });
+  // white/black
+  ['#ffffff','#000000'].forEach(c=>{
+    const d=document.createElement('div'); d.className='color-swatch';
+    d.style.cssText=`background:${c};border:1px solid #555`; d.onclick=()=>setBg(c); el.appendChild(d);
+  });
+}
+function buildGradSwatches(id) {
+  const el=document.getElementById(id); if(!el) return;
+  BG_GRADS.forEach(stops=>{
+    const d=document.createElement('div');
+    d.style.cssText=`width:26px;height:26px;border-radius:5px;cursor:pointer;flex-shrink:0;background:linear-gradient(135deg,${stops[0]},${stops[stops.length-1]})`;
+    d.onclick=()=>setBgGrad(stops); el.appendChild(d);
+  });
+}
+buildBgSwatches('bgSwatchRow'); buildBgSwatches('bgSwatchRowM');
+buildGradSwatches('gradSwatches'); buildGradSwatches('gradSwatchesM');
+
+function setBg(c) { canvas.setBackgroundImage(null); canvas.setBackgroundColor(c,canvas.renderAll.bind(canvas)); }
+function setBgGrad(stops) {
+  canvas.setBackgroundImage(null);
+  const g=new fabric.Gradient({type:'linear',gradientUnits:'pixels',coords:{x1:0,y1:0,x2:CW,y2:CH},
+    colorStops:stops.map((c,i)=>({offset:i/(stops.length-1),color:c}))});
+  canvas.setBackgroundColor(g,canvas.renderAll.bind(canvas));
+}
+function toggleBgPanel(){ const p=document.getElementById('bg-panel'); p.style.display=p.style.display==='none'?'block':'none'; }
+function toggleBgDrawer(){ const p=document.getElementById('bgDrawerInner'); p.style.display=p.style.display==='none'?'block':'none'; }
+
+// ── TEXT COLOR SWATCHES ──
+const TEXT_COLORS = ['#ffffff','#000000','#ff6b9d','#ffd700','#7c6af7','#00d4ff','#4ade80'];
+function buildTextColorRow(id) {
+  const el=document.getElementById(id); if(!el) return;
+  TEXT_COLORS.forEach(c=>{
+    const d=document.createElement('div'); d.className='color-swatch';
+    d.style.background=c; if(c==='#ffffff'||c==='#000000') d.style.border='1px solid #444';
+    d.onclick=()=>setTextColor(c); el.appendChild(d);
+  });
+  const ci=document.createElement('input'); ci.type='color';
+  ci.style.cssText='width:22px;height:22px;border-radius:50%;padding:0;border:2px solid var(--border);cursor:pointer;flex-shrink:0';
+  ci.onchange=e=>setTextColor(e.target.value); el.appendChild(ci);
+}
+buildTextColorRow('textColorRow'); buildTextColorRow('textColorRowM');
+
+// ── TEXT STYLE ──
+function isText(o){ return o&&(o.type==='i-text'||o.type==='text'); }
+function updateSelectedFont() {
+  const obj=canvas.getActiveObject(); if(!obj||!isText(obj)) return;
+  obj.set({fontFamily:getFont()}); canvas.renderAll();
+}
+function updateFontSize(s) {
+  document.getElementById('fontSizeVal').textContent=s.value;
+  const obj=canvas.getActiveObject(); if(!obj||!isText(obj)) return;
+  obj.set({fontSize:parseInt(s.value)}); canvas.renderAll();
+}
+function setTextColor(c) {
+  const obj=canvas.getActiveObject(); if(!obj) return;
+  obj.set({fill:c}); canvas.renderAll();
+}
+function toggleBold(){ const o=canvas.getActiveObject(); if(!o) return; o.set({fontWeight:o.fontWeight==='bold'?'normal':'bold'}); canvas.renderAll(); }
+function toggleItalic(){ const o=canvas.getActiveObject(); if(!o) return; o.set({fontStyle:o.fontStyle==='italic'?'normal':'italic'}); canvas.renderAll(); }
+function toggleUnderline(){ const o=canvas.getActiveObject(); if(!o) return; o.set({underline:!o.underline}); canvas.renderAll(); }
+
+// ── PROPERTIES ──
+function updatePropPanel() {
+  const obj=canvas.getActiveObject(); if(!obj||obj===wm) return;
+  if(isText(obj)){
+    const fs=document.getElementById('fontSelect'),fss=document.getElementById('fontSizeSlider'),fsv=document.getElementById('fontSizeVal');
+    if(fs) fs.value=obj.fontFamily||'Inter';
+    if(fss){ fss.value=obj.fontSize||20; }
+    if(fsv) fsv.textContent=obj.fontSize||20;
+  }
+  const icon={'i-text':'📝','text':'📝','rect':'▬','circle':'◯','image':'🖼','group':'📦'}[obj.type]||'◆';
+  document.getElementById('propPanel').innerHTML=`
+    <div style="font-weight:600;color:var(--text);margin-bottom:5px">${icon} ${obj.type}</div>
+    <div class="prop-row"><label>Opacity</label>
+      <input type="range" min="0" max="1" step="0.01" value="${obj.opacity||1}" oninput="setOpacity(this.value)" style="flex:1">
+      <span class="val">${Math.round((obj.opacity||1)*100)}%</span></div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">
+      <button class="btng" style="font-size:10px;padding:3px 7px" onclick="bringForward()">↑</button>
+      <button class="btng" style="font-size:10px;padding:3px 7px" onclick="sendBackward()">↓</button>
+      <button class="btng" style="font-size:10px;padding:3px 7px;border-color:#ff4757;color:#ff4757" onclick="deleteSelected()">✕</button>
+    </div>`;
+}
+function setOpacity(v){ const o=canvas.getActiveObject(); if(o&&o!==wm){o.set({opacity:parseFloat(v)});canvas.renderAll();} }
+function bringForward(){ const o=canvas.getActiveObject(); if(o&&o!==wm){canvas.bringForward(o);canvas.bringToFront(wm);canvas.renderAll();updateLayers();} }
+function sendBackward(){ const o=canvas.getActiveObject(); if(o&&o!==wm){canvas.sendBackwards(o);canvas.renderAll();updateLayers();} }
+function deleteSelected(){ const o=canvas.getActiveObject(); if(o&&o!==wm){canvas.remove(o);canvas.renderAll();updateLayers();} }
+
+// ── LAYERS ──
+function updateLayers() {
+  const objs=canvas.getObjects().filter(o=>o!==wm);
+  const active=canvas.getActiveObject();
+  ['layersList','layersListMobile'].forEach(lid=>{
+    const list=document.getElementById(lid); if(!list) return;
+    if(!objs.length){ list.innerHTML='<div style="font-size:11px;color:var(--text2)">No layers</div>'; return; }
+    list.innerHTML='';
+    [...objs].reverse().forEach(obj=>{
+      const icon={'i-text':'📝','text':'📝','rect':'▬','circle':'◯','image':'🖼','group':'📦'}[obj.type]||'◆';
+      const name=isText(obj)?(obj.text||'').replace(/\n/g,' ').slice(0,16):obj.type;
+      const realIdx=canvas.getObjects().indexOf(obj);
+      const div=document.createElement('div');
+      div.className='layer-item'+(obj===active?' selected':'');
+      div.innerHTML=`<span>${icon}</span><span class="layer-name">${name}</span>
+        <button class="layer-del" onclick="event.stopPropagation();rmLayer(${realIdx})">✕</button>`;
+      div.onclick=()=>{canvas.setActiveObject(obj);canvas.renderAll();updateLayers();updatePropPanel();};
+      list.appendChild(div);
+    });
+  });
+}
+function rmLayer(idx){ const o=canvas.getObjects()[idx]; if(o&&o!==wm){canvas.remove(o);canvas.renderAll();updateLayers();} }
+
+// ── STICKERS ──
+const SS = {
+  love:     ['❤️','💕','💖','💗','💘','💝','💞','💓','🌹','🌺','💌','💍','🥰','😍','💑','👫','🔐','🎀','🫶','✨'],
+  princess: ['👸','🤴','👑','💎','🌟','✨','🦄','🌈','🏰','🪄','🧚','🦋','🌸','🌺','💐','🎀','🪞','💫','🫧','🌙'],
+  space:    ['🚀','🛸','🌌','⭐','🌟','💫','🪐','🌙','☄️','👽','🤖','🛰️','🌠','🔭','🧬','⚡','🎇','🌍','🌑','🌀'],
+  cosplay:  ['⚔️','🛡️','🧙','🧝','🧜','🦸','🦹','🏹','🗡️','🪄','💎','👒','🎭','🗺️','🔮','🦅','🐉','🌋','⚡','🎪'],
+  halloween:['🎃','👻','🦇','🕷️','🕸️','💀','🧟','🧛','🪄','⚰️','🌙','🔮','🧙','🦴','😈','👹','🎭','🌑','🦅','🐈‍⬛'],
+  xmas:     ['🎄','🎅','☃️','❄️','🎁','🦌','⛄','🌟','🔔','🕯️','🧦','🪆','🍪','🥛','🎶','🌨️','🎿','🧤','🎀','🍬'],
+  party:    ['🎉','🎊','🥳','🎈','🎁','🍰','🥂','🎆','🎇','✨','🪩','🎤','🎸','🎺','🎻','🥁','🪄','💃','🕺','🎠'],
+  medical:  ['🏥','💊','💉','🩺','🩹','🦷','🧬','🔬','🩻','❤️','🩸','🧫','👨‍⚕️','👩‍⚕️','🏃','💪','🧠','🫁','🫀','⚕️'],
+  nature:   ['🌸','🌿','🍃','🦋','🌺','🌻','🌊','🏔️','🌙','✨','🍄','🌱','🦊','🐉','🧚','🌴','🌹','🍀','🌾','🌈'],
+  misc:     ['✨','🌟','💫','⭐','🎯','💎','🔥','❄️','🌈','🎪','🎭','🎨','🎬','📸','🏆','🎖️','🥇','🌀','💥','🎠'],
+};
+function loadStickerSet(cat) {
+  ['stickerGrid','stickerGridMobile'].forEach(gid=>{
+    const g=document.getElementById(gid); if(!g) return; g.innerHTML='';
+    (SS[cat]||SS.misc).forEach(em=>{
+      const b=document.createElement('div'); b.className='sticker-btn'; b.textContent=em;
+      b.onclick=()=>{addSticker(em);if(MOBILE)closeAllDrawers();};
+      g.appendChild(b);
+    });
+  });
+  ['stickerCategory','stickerCategoryM'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=cat;});
+}
+loadStickerSet('love');
+
+// ── PRESETS ──
+const PRESETS=[
+  {name:'Love Card',emoji:'❤️',bg:['#ff6b9d','#c678ff'],
+    items:[{t:'txt',s:'I Love You',x:.5,y:.18,sz:28,c:'#fff',f:'Pacifico',b:1},
+           {t:'txt',s:'❤️  ❤️  ❤️',x:.5,y:.3,sz:30},
+           {t:'txt',s:'To: _______________',x:.5,y:.8,sz:14,c:'rgba(255,255,255,0.8)'},
+           {t:'txt',s:'From: _____________',x:.5,y:.87,sz:14,c:'rgba(255,255,255,0.8)'}]},
+  {name:'Princess',emoji:'👸',bg:['#f8c8ea','#d4a0e8'],
+    items:[{t:'txt',s:'👑 Princess 👑',x:.5,y:.14,sz:20,c:'#5a2d82',f:'Playfair Display',b:1},
+           {t:'rect',x:.03,y:.21,w:.94,h:.006,c:'rgba(90,45,130,0.3)'},
+           {t:'txt',s:'Name: ___________',x:.5,y:.44,sz:16,c:'#5a2d82'},
+           {t:'txt',s:'🌸 🦋 🌺',x:.5,y:.83,sz:26},
+           {t:'txt',s:'Kingdom of Dreams',x:.5,y:.91,sz:10,c:'rgba(90,45,130,0.6)',f:'Playfair Display'}]},
+  {name:'Cosplay ID',emoji:'⚔️',bg:['#1a1a2e','#0f3460'],
+    items:[{t:'rect',x:.03,y:.03,w:.94,h:.008,c:'#00d4ff'},
+           {t:'txt',s:'⚔ COSPLAY ID ⚔',x:.5,y:.1,sz:13,c:'#00d4ff',f:'Orbitron',b:1},
+           {t:'rect',x:.03,y:.18,w:.94,h:.008,c:'#00d4ff'},
+           {t:'txt',s:'CHARACTER:',x:.5,y:.4,sz:10,c:'rgba(0,212,255,0.6)',f:'Orbitron'},
+           {t:'txt',s:'_______________',x:.5,y:.46,sz:18,c:'#00d4ff',f:'Orbitron'},
+           {t:'txt',s:'CLASS: LEVEL 99',x:.5,y:.67,sz:13,c:'rgba(0,212,255,0.8)',f:'Orbitron'},
+           {t:'rect',x:.03,y:.93,w:.94,h:.008,c:'#00d4ff'}]},
+  {name:'Medical ID',emoji:'🏥',bg:['#f0f8ff','#e0f0ff'],
+    items:[{t:'rect',x:.03,y:.03,w:.94,h:.12,c:'#2980b9',rx:4},
+           {t:'txt',s:'⚕ MEDICAL ID',x:.5,y:.1,sz:16,c:'#fff',b:1},
+           {t:'txt',s:'NAME:',x:.07,y:.21,sz:10,c:'#666',al:'left'},
+           {t:'txt',s:'______________________',x:.5,y:.26,sz:13,c:'#1a5276'},
+           {t:'txt',s:'DOB:',x:.07,y:.32,sz:10,c:'#666',al:'left'},
+           {t:'txt',s:'BLOOD TYPE:',x:.07,y:.38,sz:10,c:'#666',al:'left'},
+           {t:'txt',s:'ALLERGIES:',x:.07,y:.44,sz:10,c:'#666',al:'left'},
+           {t:'txt',s:'EMERGENCY CONTACT:',x:.5,y:.78,sz:10,c:'#c0392b'},
+           {t:'txt',s:'_______________',x:.5,y:.84,sz:14,c:'#1a5276'}]},
+  {name:'VIP Pass',emoji:'🎟️',bg:['#1a1a1a','#2d2d2d'],
+    items:[{t:'rect',x:.03,y:.03,w:.94,h:.18,c:'rgba(255,215,0,0.1)',rx:6},
+           {t:'txt',s:'⭐ VIP ACCESS ⭐',x:.5,y:.13,sz:17,c:'#ffd700',f:'Orbitron',b:1},
+           {t:'txt',s:'- - - - - - - - - - -',x:.5,y:.22,sz:12,c:'rgba(255,215,0,0.35)'},
+           {t:'txt',s:'NAME',x:.5,y:.45,sz:10,c:'rgba(255,215,0,0.5)',f:'Orbitron'},
+           {t:'txt',s:'_______________',x:.5,y:.52,sz:20,c:'#ffd700',f:'Orbitron'},
+           {t:'txt',s:'- - - - - - - - - - -',x:.5,y:.82,sz:12,c:'rgba(255,215,0,0.35)'},
+           {t:'txt',s:'ALL ACCESS',x:.5,y:.9,sz:12,c:'#ffd700',f:'Orbitron'}]},
+  {name:'Birthday',emoji:'🎉',bg:['#ff9a00','#ffcc02'],
+    items:[{t:'txt',s:'🎉 Happy Birthday! 🎉',x:.5,y:.14,sz:17,c:'#fff',f:'Pacifico'},
+           {t:'txt',s:'🎈  🎊  🥳  🎈',x:.5,y:.28,sz:26},
+           {t:'txt',s:'_______________',x:.5,y:.53,sz:24,c:'#fff',f:'Pacifico'},
+           {t:'txt',s:'You are amazing!',x:.5,y:.78,sz:13,c:'rgba(255,255,255,.9)',f:'Pacifico'},
+           {t:'txt',s:'🍰  🍰  🍰',x:.5,y:.88,sz:26}]},
+  {name:'RPG Hero',emoji:'🗡️',bg:['#2c1654','#870000'],
+    items:[{t:'rect',x:.03,y:.03,w:.94,h:.12,c:'rgba(255,215,0,0.15)',rx:4},
+           {t:'txt',s:'⚔ CHARACTER CARD ⚔',x:.5,y:.1,sz:12,c:'#ffd700',f:'Playfair Display',b:1},
+           {t:'txt',s:'CLASS: ADVENTURER',x:.5,y:.23,sz:11,c:'rgba(255,215,0,.7)'},
+           {t:'txt',s:'Name: __________',x:.5,y:.44,sz:17,c:'#ffd700',f:'Playfair Display'},
+           {t:'txt',s:'STR ██░  DEX ███░',x:.5,y:.68,sz:10,c:'rgba(255,215,0,.8)'},
+           {t:'txt',s:'INT ██░  WIS ██░░',x:.5,y:.74,sz:10,c:'rgba(255,215,0,.8)'},
+           {t:'txt',s:'⚔️ LVL 1 — HERO RANK ⚔️',x:.5,y:.9,sz:10,c:'#ffd700'}]},
+  {name:'Space Explorer',emoji:'🚀',bg:['#0f0c29','#302b63'],
+    items:[{t:'txt',s:'🌌 EXPLORER ID 🌌',x:.5,y:.12,sz:13,c:'#00d4ff',f:'Orbitron'},
+           {t:'txt',s:'⭐',x:.1,y:.08,sz:18},{t:'txt',s:'⭐',x:.85,y:.22,sz:13},
+           {t:'txt',s:'DESIGNATION:',x:.5,y:.42,sz:9,c:'rgba(0,212,255,.5)',f:'Orbitron'},
+           {t:'txt',s:'_______________',x:.5,y:.49,sz:17,c:'#00d4ff',f:'Orbitron'},
+           {t:'txt',s:'SECTOR: MILKY WAY',x:.5,y:.75,sz:9,c:'rgba(0,212,255,.6)',f:'Orbitron'},
+           {t:'txt',s:'🚀 STARFLEET 🚀',x:.5,y:.9,sz:9,c:'rgba(0,212,255,.4)',f:'Orbitron'}]},
+  {name:'Witch License',emoji:'🧙',bg:['#1a0033','#3d0066'],
+    items:[{t:'txt',s:"🔮 WITCH'S LICENSE 🔮",x:.5,y:.13,sz:13,c:'#c678ff',f:'Playfair Display',b:1},
+           {t:'txt',s:'✦  ✦  ✦',x:.5,y:.22,sz:18,c:'rgba(198,120,255,.5)'},
+           {t:'txt',s:'Name: _____________',x:.5,y:.42,sz:15,c:'#c678ff',f:'Playfair Display'},
+           {t:'txt',s:'Specialty: __________',x:.5,y:.6,sz:12,c:'rgba(198,120,255,.8)'},
+           {t:'txt',s:'🦇  🕷️  🌙  🕷️  🦇',x:.5,y:.78,sz:19},
+           {t:'txt',s:'Licensed by the Grand Coven',x:.5,y:.91,sz:9,c:'rgba(198,120,255,.5)',f:'Playfair Display'}]},
+  {name:'Superhero',emoji:'🦸',bg:['#1a0000','#4a0000'],
+    items:[{t:'rect',x:0,y:0,w:1,h:.18,c:'rgba(255,71,87,.2)'},
+           {t:'txt',s:'⚡ HERO CARD ⚡',x:.5,y:.1,sz:22,c:'#ff4757',f:'Impact',b:1},
+           {t:'txt',s:'ALIAS:',x:.5,y:.26,sz:11,c:'rgba(255,71,87,.6)',f:'Impact'},
+           {t:'txt',s:'_______________',x:.5,y:.34,sz:21,c:'#ff4757',f:'Impact'},
+           {t:'txt',s:'POWER LEVEL: 9000+',x:.5,y:.68,sz:12,c:'rgba(255,71,87,.8)',f:'Impact'},
+           {t:'rect',x:.1,y:.85,w:.8,h:.006,c:'rgba(255,71,87,.4)'},
+           {t:'txt',s:'AUTHORIZED DEFENDER',x:.5,y:.9,sz:10,c:'rgba(255,71,87,.6)',f:'Impact'}]},
+  {name:'Movie Prop',emoji:'🎬',bg:['#111','#1a1a1a'],
+    items:[{t:'txt',s:'[ PROP DEPARTMENT ]',x:.5,y:.1,sz:11,c:'rgba(255,255,255,.5)',f:'Courier New'},
+           {t:'txt',s:'━━━━━━━━━━━━',x:.5,y:.16,sz:10,c:'rgba(255,255,255,.25)'},
+           {t:'txt',s:'ITEM NO: CF-001',x:.5,y:.22,sz:11,c:'#fff',f:'Courier New'},
+           {t:'txt',s:'CHARACTER: __________',x:.5,y:.38,sz:12,c:'#fff',f:'Courier New'},
+           {t:'txt',s:'SCENE: ___',x:.5,y:.46,sz:12,c:'#fff',f:'Courier New'},
+           {t:'txt',s:'━━━━━━━━━━━━',x:.5,y:.86,sz:10,c:'rgba(255,255,255,.25)'},
+           {t:'txt',s:'DO NOT REMOVE FROM SET',x:.5,y:.92,sz:9,c:'rgba(255,255,255,.4)',f:'Courier New'}]},
+  {name:'Pet ID',emoji:'🐾',bg:['#e8f5e9','#c8e6c9'],
+    items:[{t:'rect',x:.03,y:.03,w:.94,h:.13,c:'#4caf50',rx:6},
+           {t:'txt',s:'🐾 PET ID CARD',x:.5,y:.1,sz:14,c:'#fff',b:1},
+           {t:'txt',s:'Name:',x:.07,y:.22,sz:10,c:'#555',al:'left'},
+           {t:'txt',s:'_________________',x:.5,y:.27,sz:15,c:'#2e7d32'},
+           {t:'txt',s:'Species:',x:.07,y:.34,sz:10,c:'#555',al:'left'},
+           {t:'txt',s:'Breed:',x:.07,y:.4,sz:10,c:'#555',al:'left'},
+           {t:'txt',s:'Owner:',x:.07,y:.46,sz:10,c:'#555',al:'left'},
+           {t:'txt',s:'🐕  🐈  🐇  🐹  🦜',x:.5,y:.77,sz:20},
+           {t:'txt',s:'Contact: ___________',x:.5,y:.9,sz:11,c:'#2e7d32'}]},
+  {name:'Prince',emoji:'🤴',bg:['#0a0a2e','#1a1060'],
+    items:[{t:'rect',x:.03,y:.03,w:.94,h:.95,c:'rgba(255,215,0,.05)',rx:8},
+           {t:'txt',s:'👑 ROYAL DECREE 👑',x:.5,y:.12,sz:13,c:'#ffd700',f:'Playfair Display',b:1},
+           {t:'txt',s:'━━━━━━━━━━━━━',x:.5,y:.18,sz:11,c:'rgba(255,215,0,.3)'},
+           {t:'txt',s:'His Royal Highness',x:.5,y:.28,sz:12,c:'rgba(255,215,0,.7)',f:'Playfair Display'},
+           {t:'txt',s:'Prince ___________',x:.5,y:.38,sz:19,c:'#ffd700',f:'Playfair Display'},
+           {t:'txt',s:'of the House _______',x:.5,y:.62,sz:13,c:'rgba(255,215,0,.8)',f:'Playfair Display'},
+           {t:'txt',s:'━━━━━━━━━━━━━',x:.5,y:.87,sz:11,c:'rgba(255,215,0,.3)'},
+           {t:'txt',s:'⚜ By Royal Authority ⚜',x:.5,y:.93,sz:10,c:'rgba(255,215,0,.5)',f:'Playfair Display'}]},
+  {name:'Halloween',emoji:'🎃',bg:['#1a0900','#3d1a00'],
+    items:[{t:'txt',s:'🎃 TRICK OR TREAT 🎃',x:.5,y:.14,sz:15,c:'#ff6600',f:'Georgia',b:1},
+           {t:'txt',s:'🦇  🕷️  💀  🕷️  🦇',x:.5,y:.26,sz:20},
+           {t:'txt',s:'HAUNTED IDENTITY',x:.5,y:.37,sz:13,c:'rgba(255,102,0,.7)',f:'Georgia'},
+           {t:'txt',s:'Name: __________',x:.5,y:.54,sz:15,c:'#ff6600',f:'Georgia'},
+           {t:'txt',s:'Costume: ________',x:.5,y:.7,sz:13,c:'rgba(255,102,0,.8)',f:'Georgia'},
+           {t:'txt',s:'👻  🌙  ☠️  🌙  👻',x:.5,y:.85,sz:20}]},
+  {name:'Christmas',emoji:'🎄',bg:['#0d3b1e','#1a5c2e'],
+    items:[{t:'txt',s:"🎄 SEASON'S GREETINGS 🎄",x:.5,y:.14,sz:13,c:'#fff',f:'Georgia',b:1},
+           {t:'txt',s:'❄️  ⭐  ❄️',x:.5,y:.25,sz:22},
+           {t:'txt',s:'To: _______________',x:.5,y:.46,sz:15,c:'rgba(255,255,255,.9)',f:'Georgia'},
+           {t:'txt',s:'From: _____________',x:.5,y:.55,sz:15,c:'rgba(255,255,255,.9)',f:'Georgia'},
+           {t:'txt',s:'🎁  🦌  ⛄  🦌  🎁',x:.5,y:.8,sz:19},
+           {t:'txt',s:'Wishing you joy & wonder',x:.5,y:.91,sz:11,c:'rgba(255,255,255,.7)',f:'Georgia'}]},
+  {name:'Anniversary',emoji:'💑',bg:['#1a0a00','#3d1a00'],
+    items:[{t:'txt',s:'✦ ANNIVERSARY ✦',x:.5,y:.13,sz:19,c:'#ffd700',f:'Playfair Display',b:1},
+           {t:'txt',s:'🌹  🌹  🌹',x:.5,y:.24,sz:24},
+           {t:'txt',s:'Celebrating',x:.5,y:.4,sz:13,c:'rgba(255,215,0,.7)',f:'Playfair Display'},
+           {t:'txt',s:'___ Years Together',x:.5,y:.48,sz:20,c:'#ffd700',f:'Playfair Display'},
+           {t:'txt',s:'_______________',x:.5,y:.68,sz:17,c:'rgba(255,215,0,.8)',f:'Playfair Display'},
+           {t:'txt',s:'& ______________',x:.5,y:.76,sz:17,c:'rgba(255,215,0,.8)',f:'Playfair Display'},
+           {t:'txt',s:'💑 Forever & Always 💑',x:.5,y:.91,sz:12,c:'rgba(255,215,0,.6)',f:'Playfair Display'}]},
+  {name:'Villain',emoji:'😈',bg:['#0a0000','#1a0000'],
+    items:[{t:'rect',x:0,y:0,w:1,h:.18,c:'rgba(255,0,0,.1)'},
+           {t:'txt',s:'⚡ VILLAIN PROFILE ⚡',x:.5,y:.1,sz:17,c:'#ff0000',f:'Impact',b:1},
+           {t:'txt',s:'ALIAS: ___________',x:.5,y:.35,sz:15,c:'#ff0000',f:'Impact'},
+           {t:'txt',s:'THREAT LEVEL: EXTREME',x:.5,y:.67,sz:11,c:'rgba(255,0,0,.7)',f:'Impact'},
+           {t:'rect',x:.1,y:.72,w:.8,h:.005,c:'rgba(255,0,0,.4)'},
+           {t:'txt',s:'😈  💀  ⚡  💀  😈',x:.5,y:.82,sz:20},
+           {t:'txt',s:'WANTED: DEAD OR ALIVE',x:.5,y:.93,sz:10,c:'rgba(255,0,0,.5)',f:'Impact'}]},
+  {name:'Alien Visitor',emoji:'👽',bg:['#000','#001a00'],
+    items:[{t:'txt',s:'👽 INTERGALACTIC VISA 👽',x:.5,y:.11,sz:11,c:'#00ff9d',f:'Orbitron'},
+           {t:'rect',x:.03,y:.18,w:.94,h:.006,c:'rgba(0,255,157,.3)'},
+           {t:'txt',s:'SPECIES:',x:.5,y:.27,sz:9,c:'rgba(0,255,157,.5)',f:'Orbitron'},
+           {t:'txt',s:'[ HUMAN ]',x:.5,y:.34,sz:17,c:'#00ff9d',f:'Orbitron'},
+           {t:'txt',s:'CLEARANCE: OMEGA-7',x:.5,y:.66,sz:10,c:'rgba(0,255,157,.7)',f:'Orbitron'},
+           {t:'rect',x:.03,y:.87,w:.94,h:.006,c:'rgba(0,255,157,.3)'},
+           {t:'txt',s:'APPROVED: GALACTIC COUNCIL',x:.5,y:.93,sz:9,c:'rgba(0,255,157,.4)',f:'Orbitron'}]},
+  {name:'Beach Pass',emoji:'🏖️',bg:['#0077b6','#00b4d8'],
+    items:[{t:'txt',s:'🌊 BEACH PASS 🌊',x:.5,y:.14,sz:17,c:'#fff',f:'Pacifico'},
+           {t:'txt',s:'🌞  🐚  🦀  🐚  🌞',x:.5,y:.25,sz:20},
+           {t:'txt',s:'Name: _____________',x:.5,y:.54,sz:15,c:'rgba(255,255,255,.9)',f:'Pacifico'},
+           {t:'txt',s:'🏄  🐠  🌴  🐠  🏄',x:.5,y:.86,sz:20}]},
+  {name:'Blank Dark',emoji:'◼️',bg:['#1a1a2e','#0f3460'],items:[]},
+  {name:'Blank White',emoji:'◻️',bg:['#fff','#f5f5f5'],items:[]},
+];
+const PRESET_CSS=[
+  'linear-gradient(135deg,#ff6b9d,#c678ff)','linear-gradient(135deg,#f8c8ea,#d4a0e8)',
+  'linear-gradient(135deg,#1a1a2e,#0f3460)','linear-gradient(135deg,#f0f8ff,#e0f0ff)',
+  'linear-gradient(135deg,#1a1a1a,#2d2d2d)','linear-gradient(135deg,#ff9a00,#ffcc02)',
+  'linear-gradient(135deg,#2c1654,#870000)','linear-gradient(135deg,#0f0c29,#302b63)',
+  'linear-gradient(135deg,#1a0033,#3d0066)','linear-gradient(135deg,#1a0000,#4a0000)',
+  'linear-gradient(135deg,#111,#1a1a1a)','linear-gradient(135deg,#e8f5e9,#c8e6c9)',
+  'linear-gradient(135deg,#0a0a2e,#1a1060)','linear-gradient(135deg,#1a0900,#3d1a00)',
+  'linear-gradient(135deg,#0d3b1e,#1a5c2e)','linear-gradient(135deg,#1a0a00,#3d1a00)',
+  'linear-gradient(135deg,#0a0000,#1a0000)','linear-gradient(135deg,#000,#001a00)',
+  'linear-gradient(135deg,#0077b6,#00b4d8)','linear-gradient(135deg,#1a1a2e,#0f3460)',
+  'linear-gradient(135deg,#fff,#f5f5f5)',
+];
+function buildPresetGrid(gid) {
+  const g=document.getElementById(gid); if(!g) return; g.innerHTML='';
+  PRESETS.forEach((p,i)=>{
+    const d=document.createElement('div'); d.className='preset-card';
+    d.style.background=PRESET_CSS[i%PRESET_CSS.length];
+    d.innerHTML=`<span>${p.emoji} ${p.name}</span>`;
+    d.onclick=()=>{applyPreset(i);if(MOBILE)closeAllDrawers();};
+    g.appendChild(d);
+  });
+}
+buildPresetGrid('presetGrid'); buildPresetGrid('presetGridMobile');
+
+function applyPreset(idx) {
+  const p=PRESETS[idx]; wm=null; canvas.clear();
+  const grad=new fabric.Gradient({type:'linear',gradientUnits:'pixels',coords:{x1:0,y1:0,x2:CW,y2:CH},
+    colorStops:p.bg.map((c,i)=>({offset:i/(p.bg.length-1),color:c}))});
+  canvas.setBackgroundColor(grad,()=>{});
+  const px=x=>Math.round(x<=1?x*CW:x), py=y=>Math.round(y<=1?y*CH:y), pw=w=>Math.round(w<=1?w*CW:w);
+  const addItem=(items,i)=>{
+    if(i>=items.length){ensureWM();canvas.renderAll();updateLayers();return;}
+    const it=items[i];
+    if(it.t==='txt'){
+      canvas.add(new fabric.Text(it.s,{
+        left:px(it.x||.5),top:py(it.y||.5),fontSize:it.sz||16,fill:it.c||'#fff',
+        fontFamily:it.f||'Inter',fontWeight:it.b?'bold':'normal',
+        textAlign:it.al||'center',originX:it.al==='left'?'left':'center',originY:'top',selectable:true,
+      }));
+    } else if(it.t==='rect'){
+      canvas.add(new fabric.Rect({
+        left:px(it.x||.03),top:py(it.y||.03),width:pw(it.w||.94),height:pw(it.h||.12),
+        fill:it.c||'rgba(255,255,255,.1)',rx:it.rx||0,ry:it.rx||0,selectable:true,
+      }));
+    }
+    setTimeout(()=>addItem(items,i+1),0);
+  };
+  addItem(p.items,0);
+  document.querySelectorAll('.preset-card').forEach((c,i)=>c.classList.toggle('active',i===idx));
+}
+
+// ── EXPORT ──
+function getCardDataURL(op) {
+  ensureWM(op||0.22); canvas.renderAll();
+  const data=canvas.toDataURL({format:'png',multiplier:XSCALE});
+  ensureWM(0.18); canvas.renderAll();
+  return data;
+}
+function downloadCard() {
+  const a=document.createElement('a');
+  a.download=`cardforge-${curTab}-${Date.now()}.png`;
+  a.href=getCardDataURL(); a.click();
+  toast('Downloaded with Adventure ID Lab watermark ✦');
+}
+function clearCanvas() {
+  if(!confirm('Clear this side?')) return;
+  wm=null; canvas.clear();
+  canvas.setBackgroundColor('#1a1a2e',()=>{ensureWM();canvas.renderAll();updateLayers();});
+}
+
+// ── ORDER MODAL ──
+function openSubmitModal(){document.getElementById('submitModal').classList.add('open');}
+function closeSubmitModal(){document.getElementById('submitModal').classList.remove('open');document.getElementById('submitStatus').textContent='';}
+function handleModalTap(e){if(e.target.id==='submitModal')closeSubmitModal();}
+
+async function submitOrder() {
+  const name=document.getElementById('orderName').value.trim();
+  const email=document.getElementById('orderEmail').value.trim();
+  const status=document.getElementById('submitStatus');
+  if(!name||!email){status.textContent='⚠ Name and email required.';return;}
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='⏳ Sending…';
+  status.textContent='⏳ Exporting…'; status.style.color='var(--text2)';
+  try {
+    saveState();
+    const frontPNG=states.front?await getTabPNG('front'):getCardDataURL();
+    const backPNG=states.back?await getTabPNG('back'):null;
+    status.textContent='📤 Sending to print queue…';
+    const r=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({
+      name,email,qty:document.getElementById('orderQty').value,
+      type:document.getElementById('orderType').value,
+      notes:document.getElementById('orderNotes').value,
+      frontCard:frontPNG,backCard:backPNG,
+      timestamp:new Date().toISOString(),source:'CardForge/AdventureIDLab',
+    })});
+    const json=await r.json();
+    if(json.status==='ok'||json.result==='success'){
+      status.textContent='✅ Order received! We\'ll be in touch.';
+      status.style.color='var(--success)';
+      setTimeout(closeSubmitModal,2500);
+    } else { throw new Error(json.error||'error'); }
+  } catch(e) {
+    status.textContent='⚠ GAS not configured yet — downloading locally.';
+    status.style.color='#ffd700';
+    downloadCard();
+    setTimeout(()=>{btn.disabled=false;btn.textContent='Submit Order';},2000);
+    return;
+  }
+  btn.disabled=false; btn.textContent='Submit Order';
+}
+async function getTabPNG(tab) {
+  if(!states[tab]) return null;
+  return new Promise(resolve=>{
+    const tmp=new fabric.Canvas(document.createElement('canvas'),{width:CW,height:CH});
+    tmp.loadFromJSON(states[tab],()=>{
+      const w=new fabric.Text(WATERMARK,{left:CW/2,top:CH-16,fontSize:11,fill:'#fff',
+        opacity:.22,fontFamily:'Inter',fontWeight:'600',textAlign:'center',originX:'center',originY:'bottom'});
+      tmp.add(w); tmp.renderAll();
+      resolve(tmp.toDataURL({format:'png',multiplier:XSCALE}));
+      tmp.dispose();
+    });
+  });
+}
+
+// ── MOBILE DRAWERS ──
+function mobileOpen(name) {
+  const id='drawer-'+name;
+  const isOpen=document.getElementById(id).classList.contains('open');
+  closeAllDrawers();
+  if(!isOpen){
+    document.getElementById(id).classList.add('open');
+    document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('mnav-'+name)?.classList.add('active');
+  }
+}
+function closeAllDrawers(){document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open'));}
+canvas.on('mouse:down',()=>{if(MOBILE)closeAllDrawers();});
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  const active=canvas.getActiveObject();
+  if((e.key==='Delete'||e.key==='Backspace')&&active&&active!==wm&&
+     document.activeElement.tagName!=='INPUT'&&!active.isEditing){
+    canvas.remove(active);canvas.renderAll();updateLayers();
+  }
+});
+
+// ── TOAST ──
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(type?' '+type:'');
+  clearTimeout(t._t); t._t=setTimeout(()=>{t.className='';},2800);
+}
+
+// ── RESIZE ──
+window.addEventListener('resize',()=>{
+  const ns=dispScale();
+  if(Math.abs(ns-ds)>.02){
+    ds=ns;
+    canvas.setWidth(Math.round(CW*ds));canvas.setHeight(Math.round(CH*ds));
+    canvas.setZoom(ds);canvas.renderAll();
+  }
+});
+
+// ── INIT ──
+applyPreset(0);
+</script>
+</body>
+</html>
